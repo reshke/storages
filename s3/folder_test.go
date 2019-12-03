@@ -37,3 +37,14 @@ func TestS3FolderEndpointSource(t *testing.T) {
 
 	storage.RunFolderTest(storageFolder, t)
 }
+
+func TestS3FolderRetry404Err(t *testing.T) {
+	t.Skip("Credentials needed to run S3 tests")
+
+	waleS3Prefix := "s3://test-bucket/wal-g-test-folder/Sub0"
+	storageFolder, err := ConfigureFolder(waleS3Prefix, map[string]string{})
+
+	assert.NoError(t, err)
+
+	storage.RunFolderTest(storageFolder, t)
+}

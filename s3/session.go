@@ -65,7 +65,6 @@ func getAWSRegion(s3Bucket string, config *aws.Config, settings map[string]strin
 func setupReqProxy(endpointSource, port string) *string {
 	resp, err := http.Get(endpointSource)
 	if err != nil || resp.StatusCode != 200 || resp.Body == nil {
-		tracelog.ErrorLogger.Println("Endpoint source error:", err, " status code:", resp.StatusCode)
 		return nil
 	}
 	bytes, err := ioutil.ReadAll(resp.Body)
@@ -76,10 +75,13 @@ func setupReqProxy(endpointSource, port string) *string {
 	return nil
 }
 
-
 func getDefaultConfig(settings map[string]string) *aws.Config {
+	// DefaultRetryer implements basic retry logic using exponential backoff for
+	// most services. If you want to implement custom retry logic, you can implement the
+	// request.Retryer interface.
 	config := defaults.Get().Config.
 		WithRegion(settings[RegionSetting])
+	config = request.WithRetryer(config, NewThrottlerRetries(MaxRetries))
 
 	provider := &credentials.StaticProvider{Value: credentials.Value{
 		AccessKeyID:     getFirstSettingOf(settings, []string{AccessKeyIdSetting, AccessKeySetting}),
